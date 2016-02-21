@@ -144,9 +144,8 @@ module.exports = yeoman.generators.Base.extend({
         choices: [
           { name: 'All methods and properties', value: 'all' },
           { name: 'A single method', value: 'method' },
-          /* not supported by loopback yet
-          { name: 'A single property', value: 'property' }
-          */
+          // not supported by loopback yet
+          { name: 'A single property (READ, WRITE)', value: 'property' }
         ]
       },
        {
@@ -173,9 +172,11 @@ module.exports = yeoman.generators.Base.extend({
             {name: 'Find if entry exists', value: 'exists'}, 
             {name: 'Find first entry that matches', value: 'findone'}, 
             {name: 'Count entries', value: 'count'}, 
+            {name: 'Check whether model instance exists', value: 'headexists'},
             {name: 'Create entry', value: 'create'}, 
             {name: 'Update all entries', value: 'updateall'}, 
             {name: 'Create change-stream', value: 'createchangestream'},
+            {name: 'Get change-stream', value: 'getchangestream'},
             {name: 'Insert entry', value: 'upsert'}, 
             {name: 'Update entry', value: 'updateattributes'}, 
             {name: 'Delete entry', value: 'deletebyid'}, 
@@ -195,7 +196,12 @@ module.exports = yeoman.generators.Base.extend({
       },
       {
         name: 'property',
-        message: 'Enter the property name',
+        message: 'Choose the property name', //other not implemented yet. only read and write. execute also not implemented yet. 
+        type: 'list', 
+        choices: [
+            {name: 'READ', value: 'READ'}, //only ones listed online (does not include change stream or head -- yet)
+            {name: 'WRITE', value: 'WRITE'}
+        ],
         when: function(answers) {
           return answers.scope === 'property';
         }
@@ -253,66 +259,144 @@ module.exports = yeoman.generators.Base.extend({
         }
     ];
     this.prompt(prompts, function(answers) {
-      this.accessType = answers.accessType;
-      if (answers.scope === 'method') {
-        this.accessType = 'EXECUTE';
-      }
-      this.scope = answers.scope;
-	  this.method = answers.method;
-      this.mfpServer = answers.mfpServer;
-      this.mfpScope = answers.mfpScope;
-	  this.property = answers.property;
-      this.aclDef = {
-        property: answers.property,
-        accessType: this.accessType,
-        principalType: 'ROLE', // TODO(bajtos) support all principal types
-        principalId: answers.customRole || answers.role,
-        permission: answers.permission
-      };
-      done();
-    }.bind(this));
-  },
-  
-  mfpGeneration: function() {
-	var done = this.async();
-	if (this.aclDef.permission == 'MFP') {
-        this.mfpHelperMethod(this.method, "server/component-config.json");
-        //this.mfpHelperMethod(this.method, "../auth-server/server/component-config.json");
-        
-	}
-    done();
-  },
-  
-  acl: function() {
-    if (this.aclDef.permission != 'MFP') {
-	//console.log("in acl");
-    var done = this.async();
-
-    var aclDef = this.aclDef;
-    var filter = this.modelName ?
-      { where: { name: this.modelName }, limit: 1 } :
-    {} /* all models, force refresh */;
-
-    wsModels.ModelDefinition.find(filter, function(err, models) {
-        console.log("model: "+models);
-      if (err) {
-        return done(err);
-      }
-
-      var firstError = true;
-      async.eachSeries(models, function(model, cb) {
-          //console.log("model: "+model);
-        model.accessControls.create(aclDef, function(err) {
-          if (err && firstError) {
-            helpers.reportValidationError(err);
-            firstError = false;
+      // this is when the type is an entire property (read, write, execute) and MFP -- at the moment
+      //if(answers.permission === 'MFP' && answers.scope === 'property'){
+          //something here? 
+          var methods = []; 
+          console.log("what is property: " + answers.property); 
+          console.log("what is method: " + answers.method); //the problem is that it already decides what its going to write down here!
+          if(answers.property === 'READ' && answers.method === undefined){
+              console.log("in property read");
+              //var read_methods 
+              methods= ['find','findbyid', 'findone', 'count' ];
+              //methods.concat(read_methods); 
+          }else if(answers.property === 'WRITE' && answers.method === undefined){
+              console.log("in property write");
+              //var write_methods 
+              methods = ['create', 'updateattributes', 'upsert', 'destroybyid', 'update'];
+              //methods.concat(write_methods);
+          }else if(answers.methods !== undefined && answers.property === undefined){
+              console.log("in method not property");
+              methods.push(answers.method); 
           }
-          cb(err);
-        });
-      }, done);
-    });
-	}
+          console.log("length: " + methods.length);
+          for(var i=0; i<methods.length; i++){
+
+              console.log('prop_method: ' + methods[i]);
+        
+            this.accessType='EXECUTE';
+            this.scope = answers.scope;
+            this.method = methods[i];
+            this.mfpServer = answers.mfpServer;
+            this.mfpScope = answers.mfpScope;
+            this.property = '';
+            this.aclDef = {
+                property: '',//answers.property,
+                accessType: this.accessType,
+                principalType: 'ROLE', // TODO(bajtos) support all principal types
+                principalId: answers.customRole || answers.role,
+                permission: answers.permission
+            }; 
+            
+            if (this.aclDef.permission == 'MFP') {
+                this.mfpHelperMethod(this.method, "server/component-config.json");
+                //this.mfpHelperMethod(this.method, "../auth-server/server/component-config.json");
+	        }
+            
+            else if (this.aclDef.permission != 'MFP') {
+                //console.log("in acl");
+                var done = this.async();
+
+                var aclDef = this.aclDef;
+                var filter = this.modelName ?
+                { where: { name: this.modelName }, limit: 1 } :
+                {} /* all models, force refresh */;
+
+                wsModels.ModelDefinition.find(filter, function(err, models) {
+                    console.log("model: "+models);
+                if (err) {
+                    return done(err);
+                }
+
+                var firstError = true;
+                async.eachSeries(models, function(model, cb) {
+                    //console.log("model: "+model);
+                    model.accessControls.create(aclDef, function(err) {
+                    if (err && firstError) {
+                        helpers.reportValidationError(err);
+                        firstError = false;
+                    }
+                    cb(err);
+                    });
+                }, done);
+                });
+              }
+          }
+    //   }else{
+    //     //this should be the normal route things happen.   
+    //     this.accessType = answers.accessType;
+    //     if (answers.scope === 'method') {
+    //         this.accessType = 'EXECUTE';
+    //     }
+    //     this.scope = answers.scope;
+    //     this.method = answers.method;
+    //     this.mfpServer = answers.mfpServer;
+    //     this.mfpScope = answers.mfpScope;
+    //     this.property = answers.property;
+    //     this.aclDef = {
+    //         property: answers.property,
+    //         accessType: this.accessType,
+    //         principalType: 'ROLE', // TODO(bajtos) support all principal types
+    //         principalId: answers.customRole || answers.role,
+    //         permission: answers.permission
+    //     };
+    //   }
+   //   done();
+  }.bind(this));
+    //}
+  
   },
+  
+//   mfpGeneration: function() {
+// 	var done = this.async();
+// 	if (this.aclDef.permission == 'MFP') {
+//         this.mfpHelperMethod(this.method, "server/component-config.json");
+//         //this.mfpHelperMethod(this.method, "../auth-server/server/component-config.json");
+        
+// 	}
+//     done();
+//   },
+  
+//   acl: function() {
+//     if (this.aclDef.permission != 'MFP') {
+// 	//console.log("in acl");
+//     var done = this.async();
+
+//     var aclDef = this.aclDef;
+//     var filter = this.modelName ?
+//       { where: { name: this.modelName }, limit: 1 } :
+//     {} /* all models, force refresh */;
+
+//     wsModels.ModelDefinition.find(filter, function(err, models) {
+//         console.log("model: "+models);
+//       if (err) {
+//         return done(err);
+//       }
+
+//       var firstError = true;
+//       async.eachSeries(models, function(model, cb) {
+//           //console.log("model: "+model);
+//         model.accessControls.create(aclDef, function(err) {
+//           if (err && firstError) {
+//             helpers.reportValidationError(err);
+//             firstError = false;
+//           }
+//           cb(err);
+//         });
+//       }, done);
+//     });
+// 	}
+//   },
 
   saveProject: actions.saveProject
 });
