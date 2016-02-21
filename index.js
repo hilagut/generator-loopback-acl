@@ -199,7 +199,7 @@ module.exports = yeoman.generators.Base.extend({
         message: 'Choose the property name', //other not implemented yet. only read and write. execute also not implemented yet. 
         type: 'list', 
         choices: [
-            {name: 'READ', value: 'READ'}, //only ones listed online (does not include change stream or head -- yet)
+            {name: 'READ', value: 'READ'}, 
             {name: 'WRITE', value: 'WRITE'}
         ],
         when: function(answers) {
@@ -332,28 +332,8 @@ module.exports = yeoman.generators.Base.extend({
                 });
               }
           }
-    //   }else{
-    //     //this should be the normal route things happen.   
-    //     this.accessType = answers.accessType;
-    //     if (answers.scope === 'method') {
-    //         this.accessType = 'EXECUTE';
-    //     }
-    //     this.scope = answers.scope;
-    //     this.method = answers.method;
-    //     this.mfpServer = answers.mfpServer;
-    //     this.mfpScope = answers.mfpScope;
-    //     this.property = answers.property;
-    //     this.aclDef = {
-    //         property: answers.property,
-    //         accessType: this.accessType,
-    //         principalType: 'ROLE', // TODO(bajtos) support all principal types
-    //         principalId: answers.customRole || answers.role,
-    //         permission: answers.permission
-    //     };
-    //   }
-   //   done();
+  
   }.bind(this));
-    //}
   
   },
   
