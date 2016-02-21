@@ -268,12 +268,12 @@ module.exports = yeoman.generators.Base.extend({
           if(answers.property === 'READ' && answers.method === undefined){
               console.log("in property read");
               //var read_methods 
-              methods= ['find','findbyid', 'findone', 'count' ];
+              methods= ['find','findbyid', 'findone', 'count', 'exists', 'getchangestream', 'headexists' ];
               //methods.concat(read_methods); 
           }else if(answers.property === 'WRITE' && answers.method === undefined){
               console.log("in property write");
               //var write_methods 
-              methods = ['create', 'updateattributes', 'upsert', 'destroybyid', 'update'];
+              methods = ['create', 'updateattributes', 'upsert', 'destroybyid', 'update', 'createchangestream'];
               //methods.concat(write_methods);
           }else if(answers.methods !== undefined && answers.property === undefined){
               console.log("in method not property");
