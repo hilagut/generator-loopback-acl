@@ -189,7 +189,7 @@ module.exports = yeoman.generators.Base.extend({
        {
         name: 'method',
         message:
-          'Enter the method name:',
+          'Enter the method/path name (ex. get/:id):',
         when: function(answers) {
           return answers.permission === 'MFP' && answers.method === 'Other';
         }
@@ -275,16 +275,17 @@ module.exports = yeoman.generators.Base.extend({
               //var write_methods 
               methods = ['create', 'updateattributes', 'upsert', 'destroybyid', 'update', 'createchangestream'];
               //methods.concat(write_methods);
-          }else if(answers.methods !== undefined && answers.property === undefined){
+          }else if(answers.method !== undefined && answers.property === undefined){
               console.log("in method not property");
               methods.push(answers.method); 
           }
-          console.log("length: " + methods.length);
+          
+          //console.log("length: " + methods.length);
           for(var i=0; i<methods.length; i++){
 
               console.log('prop_method: ' + methods[i]);
         
-            this.accessType='EXECUTE';
+            this.accessType=answers.accesstype;
             this.scope = answers.scope;
             this.method = methods[i];
             this.mfpServer = answers.mfpServer;
