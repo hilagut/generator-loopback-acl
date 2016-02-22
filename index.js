@@ -192,6 +192,9 @@ module.exports = yeoman.generators.Base.extend({
           'Enter the method/path name (ex. get/:id):',
         when: function(answers) {
           return answers.permission === 'MFP' && answers.method === 'Other';
+        }, 
+        filter: function(input){
+            return input.replace(/\s/g, ""); 
         }
       },
       {
@@ -267,23 +270,23 @@ module.exports = yeoman.generators.Base.extend({
           console.log("what is method: " + answers.method); //the problem is that it already decides what its going to write down here!
           if(answers.property === 'READ' && answers.method === undefined){
               console.log("in property read");
+              answers.accessType = 'READ';               
               //var read_methods 
               methods= ['find','findbyid', 'findone', 'count', 'exists', 'getchangestream', 'headexists' ];
-              //methods.concat(read_methods); 
           }else if(answers.property === 'WRITE' && answers.method === undefined){
               console.log("in property write");
               //var write_methods 
               methods = ['create', 'updateattributes', 'upsert', 'destroybyid', 'update', 'createchangestream'];
-              //methods.concat(write_methods);
+              answers.accessType = 'WRITE'; 
           }else if(answers.method !== undefined && answers.property === undefined){
+              
               console.log("in method not property");
               methods.push(answers.method); 
           }
           
           //console.log("length: " + methods.length);
           for(var i=0; i<methods.length; i++){
-
-              console.log('prop_method: ' + methods[i]);
+            console.log('prop_method: ' + methods[i]);
         
             this.accessType=answers.accesstype;
             this.scope = answers.scope;
@@ -292,7 +295,7 @@ module.exports = yeoman.generators.Base.extend({
             this.mfpScope = answers.mfpScope;
             this.property = '';
             this.aclDef = {
-                property: '',//answers.property,
+                property: '', //answers.property 
                 accessType: this.accessType,
                 principalType: 'ROLE', // TODO(bajtos) support all principal types
                 principalId: answers.customRole || answers.role,
