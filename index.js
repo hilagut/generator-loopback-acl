@@ -133,7 +133,7 @@ module.exports = yeoman.generators.Base.extend({
   },
 
   askForParameters: function() {
-    var done = this.async();
+    //var done = this.async();
 
     var prompts = [
       {
@@ -181,7 +181,7 @@ module.exports = yeoman.generators.Base.extend({
             {name: 'Update entry', value: 'updateattributes'}, 
             {name: 'Delete entry', value: 'deletebyid'}, 
             
-        ].concat(['Other']),
+        ].concat([{name:'Other', value: 'Other'}]),
         when: function(answers) {
           return answers.permission === 'MFP' && answers.scope === 'method' && answers.method !== 'Other';
         }
